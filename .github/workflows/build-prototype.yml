@@ -1,1 +1,228 @@
+name: Build Prototype
 
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  PROJECT_FOLDER: Prototyping
+  OUTPUT_FOLDER: out
+  PACKAGE_CACHE: Prototyping/.alpackages
+  BC_ENVIRONMENT: QA_Feature
+
+jobs:
+  build:
+    name: Download Symbols and Compile
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install AL Development Tools
+        shell: pwsh
+        run: |
+          dotnet tool install Microsoft.Dynamics.BusinessCentral.Development.Tools --global --prerelease
+          al help
+
+      - name: Create folders
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "${{ env.PACKAGE_CACHE }}" | Out-Null
+          New-Item -ItemType Directory -Force -Path "${{ env.OUTPUT_FOLDER }}" | Out-Null
+
+      - name: Get Business Central access token
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $body = @{
+            client_id     = "${{ secrets.BC_CLIENT_ID }}"
+            scope         = "https://api.businesscentral.dynamics.com/.default"
+            client_secret = "${{ secrets.BC_CLIENT_SECRET }}"
+            grant_type    = "client_credentials"
+          }
+
+          $tokenResponse = Invoke-RestMethod `
+            -Method Post `
+            -Uri "https://login.microsoftonline.com/${{ secrets.BC_TENANT_ID }}/oauth2/v2.0/token" `
+            -Body $body `
+            -ContentType "application/x-www-form-urlencoded"
+
+          "BC_TOKEN=$($tokenResponse.access_token)" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Download dependency symbols from QA_Feature
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          Add-Type -AssemblyName System.Web
+
+          $headers = @{
+            Authorization = "Bearer $env:BC_TOKEN"
+          }
+
+          $appJsonPath = Join-Path "${{ env.PROJECT_FOLDER }}" "app.json"
+          $appJson = Get-Content $appJsonPath -Raw | ConvertFrom-Json
+
+          $packagesBaseUrl = "https://api.businesscentral.dynamics.com/v2.0/${{ secrets.BC_TENANT_ID }}/${{ env.BC_ENVIRONMENT }}/dev/packages"
+
+          function Download-SymbolPackage {
+            param(
+              [string] $Publisher,
+              [string] $AppName,
+              [string] $VersionText
+            )
+
+            $encodedPublisher = [System.Web.HttpUtility]::UrlEncode($Publisher)
+            $encodedAppName = [System.Web.HttpUtility]::UrlEncode($AppName)
+            $encodedVersion = [System.Web.HttpUtility]::UrlEncode($VersionText)
+
+            $url = "$packagesBaseUrl`?publisher=$encodedPublisher&appName=$encodedAppName&versionText=$encodedVersion"
+
+            $safeName = "$Publisher-$AppName-$VersionText.app" -replace '[\\/:*?"<>|]', '_'
+            $outputPath = Join-Path "${{ env.PACKAGE_CACHE }}" $safeName
+
+            Write-Host "Downloading symbols: $Publisher / $AppName / $VersionText"
+            Invoke-WebRequest -Uri $url -Headers $headers -OutFile $outputPath
+          }
+
+          if ($appJson.application) {
+            Download-SymbolPackage -Publisher "Microsoft" -AppName "Application" -VersionText $appJson.application
+          }
+
+          if ($appJson.platform) {
+            Download-SymbolPackage -Publisher "Microsoft" -AppName "System Application" -VersionText $appJson.platform
+          }
+
+          if ($appJson.dependencies) {
+            foreach ($dependency in $appJson.dependencies) {
+              Download-SymbolPackage `
+                -Publisher $dependency.publisher `
+                -AppName $dependency.name `
+                -VersionText $dependency.version
+            }
+          }
+
+          Write-Host "Downloaded symbol packages:"
+          Get-ChildItem "${{ env.PACKAGE_CACHE }}" -Filter "*.app" | Select-Object Name, Length
+
+      - name: Compile Prototyping app
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          al compile `
+            --project "${{ env.PROJECT_FOLDER }}" `
+            --packagecachepath "${{ env.PACKAGE_CACHE }}" `
+            --out "${{ env.OUTPUT_FOLDER }}/Prototyping.app"
+
+      - name: Upload compiled app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Prototyping-app
+          path: out/*.app
+          if-no-files-found: error
+
+  publish:
+    name: Publish to QA_Feature
+    runs-on: windows-latest
+    needs: build
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Download compiled app artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Prototyping-app
+          path: out
+
+      - name: Get Business Central access token
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $body = @{
+            client_id     = "${{ secrets.BC_CLIENT_ID }}"
+            scope         = "https://api.businesscentral.dynamics.com/.default"
+            client_secret = "${{ secrets.BC_CLIENT_SECRET }}"
+            grant_type    = "client_credentials"
+          }
+
+          $tokenResponse = Invoke-RestMethod `
+            -Method Post `
+            -Uri "https://login.microsoftonline.com/${{ secrets.BC_TENANT_ID }}/oauth2/v2.0/token" `
+            -Body $body `
+            -ContentType "application/x-www-form-urlencoded"
+
+          "BC_TOKEN=$($tokenResponse.access_token)" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Publish app to QA_Feature
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $headers = @{
+            Authorization = "Bearer $env:BC_TOKEN"
+            "Content-Type" = "application/json"
+          }
+
+          $companiesUri = "https://api.businesscentral.dynamics.com/v2.0/${{ secrets.BC_TENANT_ID }}/${{ env.BC_ENVIRONMENT }}/api/microsoft/automation/v2.0/companies"
+          $companies = Invoke-RestMethod -Method Get -Uri $companiesUri -Headers $headers
+
+          if (-not $companies.value -or $companies.value.Count -eq 0) {
+            throw "No companies found in ${{ env.BC_ENVIRONMENT }}."
+          }
+
+          $companyId = $companies.value[0].id
+          $uploadUri = "https://api.businesscentral.dynamics.com/v2.0/${{ secrets.BC_TENANT_ID }}/${{ env.BC_ENVIRONMENT }}/api/microsoft/automation/v2.0/companies($companyId)/extensionUpload"
+
+          $upload = Invoke-RestMethod `
+            -Method Post `
+            -Uri $uploadUri `
+            -Headers $headers `
+            -Body '{"schedule":"Current version","schemaSyncMode":"Add"}'
+
+          $extensionUploadId = $upload.systemId
+          if (-not $extensionUploadId) {
+            $extensionUploadId = $upload.id
+          }
+
+          if (-not $extensionUploadId) {
+            throw "Could not determine extensionUpload id."
+          }
+
+          $appFile = Get-ChildItem -Path "out" -Filter "*.app" | Select-Object -First 1
+          if (-not $appFile) {
+            throw "No .app file found."
+          }
+
+          $binaryHeaders = @{
+            Authorization = "Bearer $env:BC_TOKEN"
+            "Content-Type" = "application/octet-stream"
+            "If-Match" = "*"
+          }
+
+          $contentUri = "$uploadUri($extensionUploadId)/extensionContent"
+
+          Invoke-RestMethod `
+            -Method Patch `
+            -Uri $contentUri `
+            -Headers $binaryHeaders `
+            -InFile $appFile.FullName
+
+          $installUri = "$uploadUri($extensionUploadId)/Microsoft.NAV.upload"
+
+          Invoke-RestMethod `
+            -Method Post `
+            -Uri $installUri `
+            -Headers @{ Authorization = "Bearer $env:BC_TOKEN" }
+
+          Write-Host "Published $($appFile.Name) to ${{ env.BC_ENVIRONMENT }}."
+          Write-Host "Business Central URL: https://businesscentral.dynamics.com/${{ secrets.BC_TENANT_ID }}/${{ env.BC_ENVIRONMENT }}"
