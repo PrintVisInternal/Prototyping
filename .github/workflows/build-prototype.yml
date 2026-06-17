@@ -29,7 +29,8 @@ jobs:
         shell: pwsh
         run: |
           dotnet tool install Microsoft.Dynamics.BusinessCentral.Development.Tools --global --prerelease
-          al help
+          al --version
+          al --help
 
       - name: Create folders
         shell: pwsh
