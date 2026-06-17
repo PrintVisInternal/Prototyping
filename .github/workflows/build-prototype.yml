@@ -120,9 +120,9 @@ jobs:
           $ErrorActionPreference = "Stop"
 
           al compile `
-            --project "${{ env.PROJECT_FOLDER }}" `
-            --packagecachepath "${{ env.PACKAGE_CACHE }}" `
-            --out "${{ env.OUTPUT_FOLDER }}/Prototyping.app"
+            /project:"${{ env.PROJECT_FOLDER }}" `
+            /packagecachepath:"${{ env.PACKAGE_CACHE }}" `
+            /out:"${{ env.OUTPUT_FOLDER }}/Prototyping.app"
 
       - name: Upload compiled app artifact
         uses: actions/upload-artifact@v4
