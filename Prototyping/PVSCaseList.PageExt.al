@@ -23,42 +23,24 @@ pageextension 50100 "PVS Case List" extends "PVS Case List"
 
     trigger OnAfterGetRecord()
     begin
-        QuotedPrice := GetQuotedPrice();
-        OrderedPrice := GetOrderedPrice();
+        QuotedPrice := GetPriceByStatus(false);
+        OrderedPrice := GetPriceByStatus(true);
     end;
 
-    local procedure GetQuotedPrice(): Decimal
+    local procedure GetPriceByStatus(IsOrder: Boolean): Decimal
     var
         PVSJobLine: Record "PVS Job Line";
-        TotalQuotedPrice: Decimal;
     begin
         PVSJobLine.SetRange(ID, Rec.ID);
         PVSJobLine.SetRange(Active, true);
-        PVSJobLine.SetRange(Status, PVSJobLine.Status::Quote);
+        if IsOrder then
+            PVSJobLine.SetRange(Status, PVSJobLine.Status::Order)
+        else
+            PVSJobLine.SetRange(Status, PVSJobLine.Status::Quote);
 
-        if PVSJobLine.FindSet() then
-            repeat
-                TotalQuotedPrice += PVSJobLine.Amount;
-            until PVSJobLine.Next() = 0;
+        PVSJobLine.CalcSums(Amount);
 
-        exit(TotalQuotedPrice);
-    end;
-
-    local procedure GetOrderedPrice(): Decimal
-    var
-        PVSJobLine: Record "PVS Job Line";
-        TotalOrderedPrice: Decimal;
-    begin
-        PVSJobLine.SetRange(ID, Rec.ID);
-        PVSJobLine.SetRange(Active, true);
-        PVSJobLine.SetRange(Status, PVSJobLine.Status::Order);
-
-        if PVSJobLine.FindSet() then
-            repeat
-                TotalOrderedPrice += PVSJobLine.Amount;
-            until PVSJobLine.Next() = 0;
-
-        exit(TotalOrderedPrice);
+        exit(PVSJobLine.Amount);
     end;
 
     var
