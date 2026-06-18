@@ -138,7 +138,7 @@ jobs:
     name: Publish to QA_Feature
     runs-on: windows-latest
     needs: build
-    if: github.event_name == 'workflow_dispatch'
+    if: success()
 
     steps:
       - name: Download compiled app artifact
