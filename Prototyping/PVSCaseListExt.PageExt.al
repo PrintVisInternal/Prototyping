@@ -12,7 +12,7 @@ pageextension 50101 "PVS Case List Ext" extends "PVS Case List"
             field("Ordered Price"; Rec."Ordered Price")
             {
                 ApplicationArea = All;
-                ToolTip = 'Specifies the total quoted price of all active job lines with status Order.';
+                ToolTip = 'Specifies the total ordered price of all active job lines with status Order.';
             }
         }
     }
