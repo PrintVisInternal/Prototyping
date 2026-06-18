@@ -14,7 +14,7 @@ pageextension 50101 "PVS Case List Ext. Pricing" extends "PVS Case List"
             {
                 ApplicationArea = All;
                 Caption = 'Ordered Price Total';
-                ToolTip = 'Specifies the sum of PVS Job quoted prices for this case where the status is Order.';
+                ToolTip = 'Specifies the sum of PVS Job ordered prices for this case where the status is Order.';
             }
         }
     }
