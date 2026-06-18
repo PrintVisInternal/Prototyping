@@ -23,11 +23,11 @@ pageextension 50100 "PVS Case List" extends "PVS Case List"
 
     trigger OnAfterGetRecord()
     begin
-        QuotedPrice := GetPriceByStatus(false);
-        OrderedPrice := GetPriceByStatus(true);
+        QuotedPrice := GetPriceForStatus(false);
+        OrderedPrice := GetPriceForStatus(true);
     end;
 
-    local procedure GetPriceByStatus(IsOrder: Boolean): Decimal
+    local procedure GetPriceForStatus(IsOrder: Boolean): Decimal
     var
         PVSJobLine: Record "PVS Job Line";
     begin
