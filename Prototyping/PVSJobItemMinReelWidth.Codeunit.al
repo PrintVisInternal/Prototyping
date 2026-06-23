@@ -45,13 +45,14 @@ codeunit 50100 "PVS Job Item Min Reel Width"
         LeavesWidth := ImpositionRec."Leaves Width";
 
         Guard.SetCalcInProgress(true);
-        TryApplyMinReelWidth(Rec, LeavesWidth);
+        if TryApplyMinReelWidth(Rec, LeavesWidth) then; // errors silenced; execution always reaches the next line
         Guard.SetCalcInProgress(false);
     end;
 
     [TryFunction]
     local procedure TryApplyMinReelWidth(var Rec: Record "PVS Job Item"; LeavesWidth: Decimal)
     begin
+        // Direct assignment does not fire OnValidate; no recursion risk here
         Rec."Minimum Reel Width" :=
             (LeavesWidth * Rec.Width) +
             ((LeavesWidth / 2) * (Rec."Front Overfold" + Rec."Milling Depth"));
