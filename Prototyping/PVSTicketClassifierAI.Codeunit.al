@@ -1,6 +1,6 @@
 /// <summary>
 /// AI classification engine for PrintVis support tickets.
-/// Calls Azure OpenAI via the BC Copilot toolkit to categorise a raw ticket description
+/// Calls Azure OpenAI via the BC Copilot toolkit to categorize a raw ticket description
 /// and return a confidence score, rationale, and suggested next action.
 /// </summary>
 codeunit 50110 "PVS Ticket Classifier AI"
@@ -103,24 +103,42 @@ codeunit 50110 "PVS Ticket Classifier AI"
             SuggestedAction := JsonTok.AsValue().AsText();
     end;
 
+    /// <summary>
+    /// Returns the StyleExpr value for a given ticket category, used for consistent
+    /// color-coding across pages without duplicating the mapping logic.
+    /// </summary>
+    procedure GetCategoryStyle(Category: Enum "PVS Ticket Category"): Text
+    begin
+        case Category of
+            Enum::"PVS Ticket Category"::Issue:
+                exit('Unfavorable');
+            Enum::"PVS Ticket Category"::EventRequest,
+            Enum::"PVS Ticket Category"::Idea:
+                exit('Favorable');
+            else
+                exit('Ambiguous');
+        end;
+    end;
+
     local procedure ParseCategory(CategoryText: Text): Enum "PVS Ticket Category"
     begin
-        case CategoryText of
-            'Issue':
+        // Compare lower-cased to handle any AI response capitalization variations
+        case LowerCase(CategoryText) of
+            'issue':
                 exit(Enum::"PVS Ticket Category"::Issue);
-            'How To':
+            'how to':
                 exit(Enum::"PVS Ticket Category"::HowTo);
-            'Event Request':
+            'event request':
                 exit(Enum::"PVS Ticket Category"::EventRequest);
-            'Idea':
+            'idea':
                 exit(Enum::"PVS Ticket Category"::Idea);
-            'License':
+            'license':
                 exit(Enum::"PVS Ticket Category"::License);
-            'BC-Related':
+            'bc-related':
                 exit(Enum::"PVS Ticket Category"::BCRelated);
-            'Technical Question':
+            'technical question':
                 exit(Enum::"PVS Ticket Category"::TechnicalQuestion);
-            'Resource Request':
+            'resource request':
                 exit(Enum::"PVS Ticket Category"::ResourceRequest);
             else
                 exit(Enum::"PVS Ticket Category"::Other);

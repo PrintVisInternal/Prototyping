@@ -114,7 +114,7 @@ page 50110 "PVS Ticket Classifier"
     begin
         if CloseAction = Action::OK then begin
             if not HasClassified then
-                Error('Please classify the ticket before saving to the log.');
+                Error('Please use the Classify action to process the ticket before saving to the log.');
             SaveToLog();
         end;
         exit(true);
@@ -146,7 +146,11 @@ page 50110 "PVS Ticket Classifier"
         OutStr.WriteText(TicketText);
         TicketClassification.Category := Category;
         TicketClassification.Confidence := Confidence;
+        if StrLen(Rationale) > MaxStrLen(TicketClassification.Rationale) then
+            Message('Note: The AI rationale was longer than %1 characters and has been truncated.', MaxStrLen(TicketClassification.Rationale));
         TicketClassification.Rationale := CopyStr(Rationale, 1, MaxStrLen(TicketClassification.Rationale));
+        if StrLen(SuggestedAction) > MaxStrLen(TicketClassification."Suggested Action") then
+            Message('Note: The AI suggested action was longer than %1 characters and has been truncated.', MaxStrLen(TicketClassification."Suggested Action"));
         TicketClassification."Suggested Action" := CopyStr(SuggestedAction, 1, MaxStrLen(TicketClassification."Suggested Action"));
         TicketClassification."Classified At" := CurrentDateTime();
         TicketClassification."Classified By" := CopyStr(UserId(), 1, MaxStrLen(TicketClassification."Classified By"));
@@ -154,16 +158,10 @@ page 50110 "PVS Ticket Classifier"
     end;
 
     local procedure UpdateCategoryStyle()
+    var
+        TicketClassifierAI: Codeunit "PVS Ticket Classifier AI";
     begin
-        case Category of
-            Enum::"PVS Ticket Category"::Issue:
-                CategoryStyle := 'Unfavorable';
-            Enum::"PVS Ticket Category"::EventRequest,
-            Enum::"PVS Ticket Category"::Idea:
-                CategoryStyle := 'Favorable';
-            else
-                CategoryStyle := 'Ambiguous';
-        end;
+        CategoryStyle := TicketClassifierAI.GetCategoryStyle(Category);
     end;
 
     var

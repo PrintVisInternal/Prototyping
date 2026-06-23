@@ -87,16 +87,10 @@ page 50111 "PVS Ticket Classification Log"
     end;
 
     local procedure UpdateCategoryStyle()
+    var
+        TicketClassifierAI: Codeunit "PVS Ticket Classifier AI";
     begin
-        case Rec.Category of
-            Enum::"PVS Ticket Category"::Issue:
-                CategoryStyle := 'Unfavorable';
-            Enum::"PVS Ticket Category"::EventRequest,
-            Enum::"PVS Ticket Category"::Idea:
-                CategoryStyle := 'Favorable';
-            else
-                CategoryStyle := 'Ambiguous';
-        end;
+        CategoryStyle := TicketClassifierAI.GetCategoryStyle(Rec.Category);
     end;
 
     var
