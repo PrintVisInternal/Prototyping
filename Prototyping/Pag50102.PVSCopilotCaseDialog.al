@@ -1,6 +1,7 @@
 page 50102 "PVS Copilot Case Dialog"
 {
     PageType = PromptDialog;
+    Extensible = false;
     Caption = 'New Case with Copilot';
     ApplicationArea = All;
     IsPreview = true;

@@ -1,6 +1,6 @@
 /// <summary>
 /// Populates the PVS Case History table from historical PrintVis cases.
-/// NOTE: Verify the field names below against your PVS Case Header table definition.
+/// NOTE: Verify the field names below against your PVS Case table definition.
 ///       The following assumptions were made:
 ///         "No."                      - primary key
 ///         "Sell-to Customer No."     - customer link
@@ -29,7 +29,7 @@ codeunit 50100 "PVS Case History Mgmt"
     var
         Setup: Record "PVS AI Case Setup";
         CaseHistory: Record "PVS Case History";
-        PVSCaseHeader: Record "PVS Case Header";
+        PVSCaseHeader: Record "PVS Case";
         Customer: Record Customer;
         PatternAnalysis: Codeunit "PVS Pattern Analysis";
         FromDate: Date;

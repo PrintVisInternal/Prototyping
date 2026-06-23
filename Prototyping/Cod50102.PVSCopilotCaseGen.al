@@ -60,8 +60,8 @@ codeunit 50102 "PVS Copilot Case Gen"
     end;
 
     /// <summary>
-    /// Creates a new PVS Case Header from a Copilot suggestion and opens it for review.
-    /// NOTE: Verify field names against your PVS Case Header table definition.
+    /// Creates a new PVS Case from a Copilot suggestion and opens it for review.
+    /// NOTE: Verify field names against your PVS Case table definition.
     /// </summary>
     procedure CreateCaseFromSuggestion(
         JobTypeCode: Code[20];
@@ -71,7 +71,7 @@ codeunit 50102 "PVS Copilot Case Gen"
         Quantity: Decimal;
         DueDays: Integer)
     var
-        PVSCaseHeader: Record "PVS Case Header";
+        PVSCaseHeader: Record "PVS Case";
     begin
         PVSCaseHeader.Init();
         PVSCaseHeader."Sell-to Customer No." := CustomerNo;

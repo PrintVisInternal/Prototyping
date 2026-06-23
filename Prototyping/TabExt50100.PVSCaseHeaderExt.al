@@ -1,9 +1,9 @@
 /// <summary>
-/// Extends the PrintVis Case Header table with Copilot audit fields.
-/// NOTE: If the base table name differs from "PVS Case Header" in your environment,
+/// Extends the PrintVis Case table with Copilot audit fields.
+/// NOTE: If the base table name differs from "PVS Case" in your environment,
 ///       update the extends clause accordingly.
 /// </summary>
-tableextension 50100 "PVS Case Header Ext" extends "PVS Case Header"
+tableextension 50100 "PVS Case Header Ext" extends "PVS Case"
 {
     fields
     {
