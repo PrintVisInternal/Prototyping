@@ -15,6 +15,7 @@ tableextension 50100 "PVS Job Item Min Reel Width" extends "PVS Job Item"
             begin
                 if Guard.IsCalcInProgress() then
                     exit;
+                // Per spec: the difference (new - old) is added 1:1 to Front Overfold
                 Diff := Rec."Minimum Reel Width" - xRec."Minimum Reel Width";
                 if Diff <> 0 then
                     Rec."Front Overfold" := Rec."Front Overfold" + Diff;
