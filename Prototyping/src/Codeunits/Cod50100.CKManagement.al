@@ -85,7 +85,8 @@ codeunit 50100 "CK Management"
                 ItemJnlLine.Validate("Entry Type", ItemJnlLine."Entry Type"::"Negative Adjmt.");
                 ItemJnlLine.Validate("Item No.", MixLine."Base Component Item No.");
                 ItemJnlLine.Validate(Quantity, MixLine."Quantity Used");
-                ItemJnlLine."Lot No." := MixLine."LOT No.";
+                if MixLine."LOT No." <> '' then
+                    ItemJnlLine."Lot No." := MixLine."LOT No.";
                 ItemJnlLine."Document No." := DocumentNo;
                 ItemJnlLine."Source Code" := GetSourceCode();
                 ItemJnlPostLine.RunWithCheck(ItemJnlLine);

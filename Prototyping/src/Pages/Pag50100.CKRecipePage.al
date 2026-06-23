@@ -70,10 +70,21 @@ page 50100 "CK Recipe Page"
     var
         ItemFilter: Code[20];
     begin
-        ItemFilter := CopyStr(Rec.GetFilter("Item No."), 1, 20);
+        ItemFilter := GetSingleCodeFilter();
         if ItemFilter <> '' then begin
             Rec."Item No." := ItemFilter;
             Rec."Line No." := Rec.GetNextLineNo(ItemFilter);
         end;
+    end;
+
+    local procedure GetSingleCodeFilter(): Code[20]
+    var
+        FilterTxt: Text;
+    begin
+        FilterTxt := Rec.GetFilter("Item No.");
+        // Only use the filter when it represents exactly one value (no wildcards or OR)
+        if (FilterTxt <> '') and (FilterTxt.IndexOf('|') = 0) and (FilterTxt.IndexOf('*') = 0) and (FilterTxt.IndexOf('&') = 0) then
+            exit(CopyStr(FilterTxt, 1, 20));
+        exit('');
     end;
 }

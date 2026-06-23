@@ -59,6 +59,7 @@ table 50102 "CK Mix Line"
         {
             Caption = 'Percentage (%)';
             DecimalPlaces = 2 : 5;
+            MinValue = 0;
         }
         field(10; "Shelf No."; Code[20])
         {

@@ -74,14 +74,26 @@ page 50103 "CK Mix Lines"
     trigger OnNewRecord(BelowxRec: Boolean)
     var
         HeaderNo: Integer;
-        HeaderFilter: Text;
     begin
-        HeaderFilter := Rec.GetFilter("Mix Header Entry No.");
-        if (HeaderFilter <> '') and Evaluate(HeaderNo, HeaderFilter) then begin
+        HeaderNo := GetSingleIntFilter();
+        if HeaderNo <> 0 then begin
             Rec."Mix Header Entry No." := HeaderNo;
             Rec."Line No." := Rec.GetNextLineNo(HeaderNo);
         end;
         IsEditable := true;
+    end;
+
+    local procedure GetSingleIntFilter(): Integer
+    var
+        FilterTxt: Text;
+        HeaderNo: Integer;
+    begin
+        FilterTxt := Rec.GetFilter("Mix Header Entry No.");
+        // Only parse when the filter is a plain single integer (no ranges, wildcards, or OR)
+        if (FilterTxt <> '') and (FilterTxt.IndexOf('|') = 0) and (FilterTxt.IndexOf('.') = 0) and (FilterTxt.IndexOf('*') = 0) then
+            if Evaluate(HeaderNo, FilterTxt) then
+                exit(HeaderNo);
+        exit(0);
     end;
 
     var
