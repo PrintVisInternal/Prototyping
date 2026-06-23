@@ -27,8 +27,12 @@ codeunit 50100 "PVS Job Item Min Reel Width"
     local procedure CalcMinReelWidth(var Rec: Record "PVS Job Item")
     var
         ImpositionRec: Record "PVS Imposition Code";
+        Guard: Codeunit "PVS Min Reel Width Guard";
         LeavesWidth: Decimal;
     begin
+        if Guard.IsCalcInProgress() then
+            exit;
+
         if not ComponentTypeIsInside(Rec."Component Type") then
             exit;
 
@@ -40,13 +44,15 @@ codeunit 50100 "PVS Job Item Min Reel Width"
 
         LeavesWidth := ImpositionRec."Leaves Width";
 
+        Guard.SetCalcInProgress(true);
         Rec."Minimum Reel Width" :=
             (LeavesWidth * Rec.Width) +
             ((LeavesWidth / 2) * (Rec."Front Overfold" + Rec."Milling Depth"));
+        Guard.SetCalcInProgress(false);
     end;
 
     local procedure ComponentTypeIsInside(ComponentType: Code[10]): Boolean
     begin
-        exit(StrPos(ComponentType, 'INSIDE') > 0);
+        exit(StrPos(UpperCase(ComponentType), 'INSIDE') > 0);
     end;
 }

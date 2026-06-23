@@ -9,7 +9,6 @@ pageextension 50101 "PVS Job Items ListPart Ext" extends "PVS Job Items ListPart
                 ApplicationArea = All;
                 Caption = 'Minimum Reel Width';
                 ToolTip = 'Minimum Reel Width in mm';
-                Editable = true;
             }
         }
     }
