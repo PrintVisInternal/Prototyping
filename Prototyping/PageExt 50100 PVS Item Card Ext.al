@@ -2,7 +2,7 @@ pageextension 50100 "PVS Item Card Ext" extends "Item Card"
 {
     layout
     {
-        addafter(6010118)
+        addafter("PVS ECO Label Code")
         {
             field("PVS FSC License No."; Rec."PVS FSC License No.")
             {

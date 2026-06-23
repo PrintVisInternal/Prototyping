@@ -9,7 +9,6 @@ table 50100 "PVS FSC License"
         field(1; "Code"; Code[20])
         {
             Caption = 'Code';
-            NotBlank = true;
         }
         field(2; Description; Text[100])
         {
