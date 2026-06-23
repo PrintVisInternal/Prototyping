@@ -61,7 +61,6 @@ codeunit 50102 "PVS Copilot Case Gen"
 
     /// <summary>
     /// Creates a new PVS Case from a Copilot suggestion and opens it for review.
-    /// NOTE: Verify field names against your PVS Case table definition.
     /// </summary>
     procedure CreateCaseFromSuggestion(
         JobTypeCode: Code[20];
@@ -74,14 +73,12 @@ codeunit 50102 "PVS Copilot Case Gen"
         PVSCaseHeader: Record "PVS Case";
     begin
         PVSCaseHeader.Init();
-        PVSCaseHeader."Sell-to Customer No." := CustomerNo;
-        PVSCaseHeader."Job Type" := JobTypeCode;
-        PVSCaseHeader.Description :=
-            CopyStr(Description, 1, MaxStrLen(PVSCaseHeader.Description));
-        PVSCaseHeader.Quantity := Quantity;
+        PVSCaseHeader."Customer No." := CustomerNo;
+        PVSCaseHeader."Job Type Code" := JobTypeCode;
+        PVSCaseHeader."Quantity 1" := Quantity;
         PVSCaseHeader."Order Date" := Today();
         if DueDays > 0 then
-            PVSCaseHeader."Requested Delivery Date" := Today() + DueDays;
+            PVSCaseHeader."Due Date" := Today() + DueDays;
 
         PVSCaseHeader."Copilot Assisted" := true;
         PVSCaseHeader."Copilot Assisted At" := CurrentDateTime();
@@ -204,8 +201,10 @@ codeunit 50102 "PVS Copilot Case Gen"
             ApiKey := '';
     end;
 
-    local procedure NewLine(): Text[2]
+    local procedure NewLine(): Text
+    var
+        TypeHelper: Codeunit "Type Helper";
     begin
-        exit('' + Chr(13) + Chr(10));
+        exit(TypeHelper.NewLine());
     end;
 }

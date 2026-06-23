@@ -144,7 +144,7 @@ codeunit 50101 "PVS Pattern Analysis"
 
         // Confidence = min(100, sqrt(CaseCount) * 20) — more cases = higher confidence
         CasePattern."Confidence Score" :=
-            Round(MinDecimal(100, Sqrt(CaseCount) * 20), 0.1);
+            Round(MinDecimal(100, Power(CaseCount, 0.5) * 20), 0.1);
 
         CasePattern.Insert(false);
     end;

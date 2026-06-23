@@ -1,16 +1,5 @@
 /// <summary>
 /// Populates the PVS Case History table from historical PrintVis cases.
-/// NOTE: Verify the field names below against your PVS Case table definition.
-///       The following assumptions were made:
-///         "No."                      - primary key
-///         "Sell-to Customer No."     - customer link
-///         "Description"             - case description
-///         "Job Type"                - job type code
-///         "Order Date"              - order/creation date
-///         "Requested Delivery Date" - due date
-///         "Quantity"                - order quantity
-///         "Total Price"             - total sales price
-///         "Status"                  - case status
 /// </summary>
 codeunit 50100 "PVS Case History Mgmt"
 {
@@ -44,15 +33,13 @@ codeunit 50100 "PVS Case History Mgmt"
         if PVSCaseHeader.FindSet() then
             repeat
                 CaseHistory.Init();
-                CaseHistory."Case No." := PVSCaseHeader."No.";
-                CaseHistory."Customer No." := PVSCaseHeader."Sell-to Customer No.";
-                CaseHistory."Description" :=
-                    CopyStr(PVSCaseHeader.Description, 1, MaxStrLen(CaseHistory.Description));
-                CaseHistory."Job Type Code" := PVSCaseHeader."Job Type";
+                CaseHistory."Case No." := CopyStr(Format(PVSCaseHeader.ID), 1, MaxStrLen(CaseHistory."Case No."));
+                CaseHistory."Customer No." := PVSCaseHeader."Customer No.";
+                CaseHistory."Job Type Code" := PVSCaseHeader."Job Type Code";
                 CaseHistory."Order Date" := PVSCaseHeader."Order Date";
-                CaseHistory."Due Date" := PVSCaseHeader."Requested Delivery Date";
-                CaseHistory."Quantity" := PVSCaseHeader.Quantity;
-                CaseHistory."Total Amount" := PVSCaseHeader."Total Price";
+                CaseHistory."Due Date" := PVSCaseHeader."Due Date";
+                CaseHistory."Quantity" := PVSCaseHeader."Quantity 1";
+                CaseHistory."Total Amount" := PVSCaseHeader."Total Sales Price";
                 CaseHistory."Status" := Format(PVSCaseHeader.Status);
                 CaseHistory."Created Date" := PVSCaseHeader."Order Date";
 
@@ -62,7 +49,7 @@ codeunit 50100 "PVS Case History Mgmt"
                     CaseHistory."Turnaround Days" :=
                         CaseHistory."Due Date" - CaseHistory."Order Date";
 
-                if Customer.Get(PVSCaseHeader."Sell-to Customer No.") then begin
+                if Customer.Get(PVSCaseHeader."Customer No.") then begin
                     CaseHistory."Customer Name" :=
                         CopyStr(Customer.Name, 1, MaxStrLen(CaseHistory."Customer Name"));
                     CaseHistory."Customer Segment" := Customer."Customer Posting Group";
