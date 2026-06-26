@@ -2,7 +2,7 @@ pageextension 50101 "PVS Job Items ListPart Ext" extends "PVS Job Items ListPart
 {
     layout
     {
-        addafter("Imposition Type")
+        addafter(ImpositionType)
         {
             field("Minimum Reel Width"; Rec."Minimum Reel Width")
             {

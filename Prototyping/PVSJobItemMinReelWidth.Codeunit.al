@@ -1,6 +1,6 @@
-codeunit 50100 "PVS Job Item Min Reel Width"
+codeunit 50103 "PVS Job Item Min Reel Width"
 {
-    [EventSubscriber(ObjectType::Table, Database::"PVS Job Item", 'OnAfterValidateEvent', 'Format Code', false, false)]
+    [EventSubscriber(ObjectType::Table, Database::"PVS Job Item", 'OnAfterValidateEvent', 'Final Format Code', false, false)]
     local procedure OnAfterValidateFormatCode(var Rec: Record "PVS Job Item"; var xRec: Record "PVS Job Item")
     begin
         CalcMinReelWidth(Rec);
@@ -36,7 +36,8 @@ codeunit 50100 "PVS Job Item Min Reel Width"
         if not ComponentTypeIsInside(Rec."Component Type") then
             exit;
 
-        if (Rec."Format Code" = '') or (Rec."Controlling Sheet Unit" = '') or (Rec."Imposition Type" = '') then
+        Rec.CalcFields("Controlling Sheet Unit");
+        if (Rec."Final Format Code" = '') or (Rec."Controlling Sheet Unit" = '') or (Rec."Imposition Type" = '') then
             exit;
 
         if not ImpositionRec.Get(Rec."Imposition Type") then
